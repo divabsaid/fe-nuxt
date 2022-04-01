@@ -29,10 +29,10 @@
           >
           <div class="flex flex-col ml-2">
             <p class="text-sm font-medium">
-              Direktur
+              {{ getUserInfo.role_name }}
             </p>
             <p class="text-sm font-medium text-gray-500">
-              Moch Anji Sumarn..
+              {{ getUserInfo.fullname }}
             </p>
           </div>
         </div>
@@ -628,13 +628,16 @@ export default {
       loadingMap: true
     }
   },
+  computed: {
+    getUserInfo () {
+      return this.$store.getters.getUserInfo
+    }
+  },
   // props: {
   //   msg: String,
   // },
   //   components: { XIcon, PieChart, ViewGridAddIcon, LMap, LTileLayer, LMarker, LPopup },
-  mounted () {
 
-  },
   async beforeMount () {
     // // HERE is where to load Leaflet components!
     // const { circleMarker } = await import("leaflet/dist/leaflet-src.esm");

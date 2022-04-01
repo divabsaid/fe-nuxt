@@ -25,14 +25,14 @@
       <table style="width: 100%" class="border-collapse border border-white">
         <thead>
           <tr class="bg-blue-900  rounded-t-xl w-full border border-white">
-            <th v-for="(col,i) in cols" :key="col" :class="'font-normal leading-10 text-white px-2 '+col.class " @click="sortTable(i)">
+            <th v-for="(col,j) in cols" :key="j" :class="'font-normal leading-10 text-white px-2 '+col.class " @click="sortTable(j)">
               {{ col.value }}
               <font-awesome-icon :icon="['fas', 'up-down']" />
             </th>
           </tr>
         </thead>
         <tbody cellspacing="4">
-          <tr v-for="(row,i) in get_rows()" :key="i" class=" bg-gray-100 px-6 py-4 border border-white">
+          <tr v-for="(row,v) in get_rows()" :key="v" class=" bg-gray-100 px-6 py-4 border border-white">
             <td v-for="(r, j) in row" :key="j">
               <div :class="r.class">
                 {{ r.value }}
@@ -47,18 +47,21 @@
             Data yang ditampilkan
           </p>
           <select v-model="elementsPerPage" class="font-semibold bg-gray-100" @change="change_element_per_page($event)">
-            <option value="1">
-              1
-            </option>
             <option value="2">
               2
+            </option>
+            <option value="4">
+              4
+            </option>
+            <option value="6">
+              6
             </option>
           </select>
         </div>
         <div class="flex items-center ">
           <div
             class="mx-3 font-semibold"
-            @click="change_page(i)"
+            @click="change_page(parseInt(currentPage) - 1)"
           >
             <font-awesome-icon
               :icon="['fas', 'angle-left']"
@@ -75,7 +78,7 @@
           </div>
           <div
             class="mx-3 font-semibold"
-            @click="change_page(i)"
+            @click="change_page(parseInt(currentPage) + 1)"
           >
             Next
             <font-awesome-icon
@@ -94,7 +97,7 @@ export default {
   data () {
     return {
       currentPage: 1,
-      elementsPerPage: 1,
+      elementsPerPage: 2,
       ascending: false,
       sortColumn: '',
       cols: [
@@ -124,84 +127,59 @@ export default {
           class: 'text-center'
         }
       ],
-      rows: [
-        [
-          {
-            value: 'Belum ditugaskan',
-            class: 'mx-auto font-normal text-white text-sm py-1 rounded-full m-2 text-center w-max px-4 ' + (this.elementsPerPage > 1 ? 'bg-red-500' : this.elementsPerPage > 2 ? 'bg-yellow-500' : 'bg-green-500')
-          },
-          {
-            value: '21 Juli 2021',
-            class: 'text-center'
-          },
-          {
-            value: 'HBL 124',
-            class: ''
-          },
-          {
-            value: 'Kerusakan Aset',
-            class: ''
-          },
-          {
-            value: 'Blimbing',
-            class: ''
-          },
-          {
-            value: 'Tekanan pipa 0.1',
-            class: ''
-          },
-          {
-            value: '-',
-            class: ''
-          },
-          {
-            value: 'Belum ada penugasan',
-            class: ''
-          }
-        ],
-        [
-          {
-            value: 'Sedang dikerjakan',
-            class: 'mx-auto font-normal text-white text-sm py-1 rounded-full m-2 text-center w-max px-4 ' + (this.elementsPerPage < 1 ? 'bg-red-500' : this.elementsPerPage < 2 ? 'bg-yellow-500' : 'bg-green-500')
-          },
-          {
-            value: '11 Juli 2021',
-            class: 'text-center'
-          },
-          {
-            value: 'HBL 123',
-            class: ''
-          },
-          {
-            value: 'Kerusakan Aset',
-            class: ''
-          },
-          {
-            value: 'Blimbing',
-            class: ''
-          },
-          {
-            value: 'Tekanan pipa 0.1',
-            class: ''
-          },
-          {
-            value: '-',
-            class: ''
-          },
-          {
-            value: 'Belum ada penugasan',
-            class: ''
-          }
-        ]
-
-      ]
-
+      rows: []
     }
   },
   computed: {
 
   },
+  mounted () {
+    this.getPengajuanData()
+  },
   methods: {
+    async getPengajuanData () {
+      try {
+        const response = await this.$axios.$get('/api/v1/pengerjaans?limit=10')
+        this.rows = response.data.map((item) => {
+          return [
+            {
+              value: item.status,
+              class: 'mx-auto font-normal text-white text-sm py-1 rounded-full m-2 text-center w-max px-4 ' + (item.id > 1 ? 'bg-red-500' : item.id > 2 ? 'bg-yellow-500' : 'bg-green-500')
+            },
+            {
+              value: item.tanggal,
+              class: 'text-center'
+            },
+            {
+              value: item.nama_spk,
+              class: ''
+            },
+            {
+              value: item.pengaduan,
+              class: ''
+            },
+            {
+              value: item.lokasi,
+              class: ''
+            },
+            {
+              value: item.detail,
+              class: ''
+            },
+            {
+              value: item.estimasi_selesai,
+              class: ''
+            },
+            {
+              value: item.penanggung_jawab,
+              class: ''
+            }
+          ]
+        })
+      } catch (err) {
+        console.log(err)
+      }
+    },
     sortTable: function sortTable (col) {
       if (this.sortColumn === col) {
         this.ascending = !this.ascending
@@ -226,14 +204,19 @@ export default {
     },
     get_rows: function getRows () {
       const start = (this.currentPage - 1) * this.elementsPerPage
-      const end = start + this.elementsPerPage
+      const end = parseInt(start) + parseInt(this.elementsPerPage)
+      console.log('haha', start, end)
       return this.rows.slice(start, end)
     },
     change_page: function changePage (page) {
-      this.currentPage = page
+      console.log((page > 0), (page <= this.num_pages()))
+      if (page > 0 && page <= this.num_pages()) {
+        this.currentPage = page
+      }
     },
     change_element_per_page: function changeElementPerPage (event) {
       this.elementsPerPage = event.target.value
+      this.currentPage = 1
       this.get_rows()
       this.num_pages()
     }
