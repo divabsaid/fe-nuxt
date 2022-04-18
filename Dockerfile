@@ -1,13 +1,11 @@
 # build stage
 FROM node:lts-alpine as build-stage
-ARG PORT=""
-ARG BE_API=""
 
 WORKDIR /app
 COPY package*.json ./
 RUN yarn install
 COPY . .
-RUN yarn build
+RUN yarn generate
 
 # production stage
 FROM nginx:stable-alpine as production-stage
